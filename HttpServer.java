@@ -4,31 +4,29 @@ import java.util.Date;
 
 public class HttpServer extends Thread {
 
-  private Socket client;
+  private Socket socket;
   private DataOutputStream out = null;
   private String request;
   private String root = System.getenv("ROOTDIR");
 
-  private HttpServer(Socket socket) {
-    client = socket;
+  private HttpServer(Socket s) {
+    socket = s;
   }
 
   public void run() {
     BufferedReader in = null;
     try {
-      in = new BufferedReader(new InputStreamReader(client.getInputStream()));
-      out = new DataOutputStream(client.getOutputStream());
+      in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+      out = new DataOutputStream(socket.getOutputStream());
       request = in.readLine();
       String path = request.substring(4, request.length() - 9).trim();
+      System.out.println(path);
       if (request.startsWith("GET") || request.startsWith("HEAD")) {
         if (path.equals("/")) {
           sendDefaultResponse(200, "OK", "No content was generated for this request.");
         } else {
-          path = "./" + root + path;
-          System.out.println(path);
-          System.out.println(path);
-
-          File file = new File(path);
+          String filepath = "./" + root + path;
+          File file = new File(filepath);
           if (file.isFile()) {
             sendFileResponse(200, "OK", file);
           } else {
@@ -38,9 +36,7 @@ public class HttpServer extends Thread {
         }
       } else {
         sendDefaultResponse(
-            400,
-            "Bad Request",
-            "Your browser sent a request that this server could not understand.");
+            400, "Bad Request", "The client sent a request that this server could not understand.");
       }
     } catch (Exception e) {
       System.err.println(e);
@@ -53,7 +49,7 @@ public class HttpServer extends Thread {
     writeGeneralResponseHeaders(statusCode, statusTitle);
     out.writeBytes("content-type: " + "text/plain" + "\r\n");
     out.writeBytes("\r\n");
-    if (request.startsWith("GET")) {
+    if (!request.startsWith("HEAD")) {
       out.writeBytes(statusCode + " " + statusTitle + " " + message + "\r\n");
     }
     out.flush();
