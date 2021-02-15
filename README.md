@@ -1,6 +1,6 @@
 # Docker HttpWebServer
 
-A simple  webserver handling GET and HEAD Requests running in a Docker Container serving directories and static files.
+A simple  webserver handling GET and HEAD Requests running in a Docker Container serving directories and static files from a user-specified directory. Server was tested with browser and Postman.
 
 ## Getting Started
 
