@@ -7,6 +7,7 @@ public class HttpServer extends Thread {
   private Socket client;
   private DataOutputStream out = null;
   private String request;
+  private String root = System.getenv("ROOTDIR");
 
   private HttpServer(Socket socket) {
     client = socket;
@@ -23,7 +24,10 @@ public class HttpServer extends Thread {
         if (path.equals("/")) {
           sendDefaultResponse(200, "OK", "No content was generated for this request.");
         } else {
-          path = "." + path;
+          path = "./" + root + path;
+          System.out.println(path);
+          System.out.println(path);
+
           File file = new File(path);
           if (file.isFile()) {
             sendFileResponse(200, "OK", file);
