@@ -4,8 +4,6 @@ A simple  webserver handling GET and HEAD Requests running in a Docker Container
 
 ## Getting Started
 
-These instructions will cover usage information for the docker container 
-
 ### Prerequisities
 
 In order to run this container you'll need docker and docker compose installed.
@@ -21,7 +19,7 @@ In order to run this container you'll need docker and docker compose installed.
 ### Usage
 
 1. Add directory/files to project folder
-2. Run the Container with `ROOTDIR=[directory] docker-compose up`
+2. Run the Container and set the root directory with `ROOTDIR=[directory] docker-compose up`
 3. Explore files by sending requests to `localhost:8080/[path in directory]`
 
 ## License
