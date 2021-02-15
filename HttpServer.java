@@ -5,7 +5,7 @@ import java.util.Date;
 public class HttpServer extends Thread {
 
   private Socket client;
-  private DataOutputStream out;
+  private DataOutputStream out = null;
   private String request;
 
   private HttpServer(Socket socket) {
@@ -13,60 +13,72 @@ public class HttpServer extends Thread {
   }
 
   public void run() {
+    BufferedReader in = null;
     try {
-      BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));
+      in = new BufferedReader(new InputStreamReader(client.getInputStream()));
       out = new DataOutputStream(client.getOutputStream());
       request = in.readLine();
       String path = request.substring(4, request.length() - 9).trim();
       if (request.startsWith("GET") || request.startsWith("HEAD")) {
         if (path.equals("/")) {
-          sendResponse(200, "OK", "No content was generated for this request.", null);
+          sendDefaultResponse(200, "OK", "No content was generated for this request.");
         } else {
-          path = "." + request.substring(4, request.length() - 9).trim();
+          path = "." + path;
           File file = new File(path);
           if (file.isFile()) {
-            sendResponse(200, "OK", "", file);
+            sendFileResponse(200, "OK", file);
           } else {
-            sendResponse(
-                404, "File not found", "The requested URL was not found on this server.", null);
+            sendDefaultResponse(
+                404, "File not found", "The requested URL was not found on this server.");
           }
         }
       } else {
-        sendResponse(
+        sendDefaultResponse(
             400,
             "Bad Request",
-            "Your browser sent a request that this server could not understand.",
-            null);
+            "Your browser sent a request that this server could not understand.");
       }
-      out.flush();
     } catch (Exception e) {
       System.err.println(e);
     }
   }
 
-  private void sendResponse(int statusCode, String statusTitle, String message, File file)
+  // Default Server Response
+  private void sendDefaultResponse(int statusCode, String statusTitle, String message)
       throws Exception {
-    String http = request.substring(request.length() - 8, request.length()).trim();
-    String status = http + " " + statusCode + " " + statusTitle + "\r\n";
-    out.writeBytes(status);
-    out.writeBytes("Server: Java File Server" + "\r\n");
-    out.writeBytes("date: " + new Date() + "\r\n");
-    if (file != null) {
-      out.writeBytes("content-type: " + getFileMimeType(file) + "\r\n");
-      out.writeBytes("content-length: " + file.length() + "\r\n");
-      out.writeBytes("last-modified: " + new Date(file.lastModified()) + "\r\n");
-      out.writeBytes("\r\n");
-      sendFile(file);
-    } else {
-      out.writeBytes("content-type: " + "text/plain" + "\r\n");
-      out.writeBytes("\r\n");
-      if (!request.startsWith("HEAD")) out.writeBytes(status + message + "\r\n");
+    writeGeneralResponseHeaders(statusCode, statusTitle);
+    out.writeBytes("content-type: " + "text/plain" + "\r\n");
+    out.writeBytes("\r\n");
+    if (request.startsWith("GET")) {
+      out.writeBytes(statusCode + " " + statusTitle + " " + message + "\r\n");
     }
     out.flush();
     out.close();
   }
 
-  private void sendFile(File file) {
+  // File Response
+  private void sendFileResponse(int statusCode, String statusTitle, File file) throws Exception {
+    writeGeneralResponseHeaders(statusCode, statusTitle);
+    out.writeBytes("content-type: " + getFileMimeType(file) + "\r\n");
+    out.writeBytes("content-length: " + file.length() + "\r\n");
+    out.writeBytes("last-modified: " + new Date(file.lastModified()) + "\r\n");
+    out.writeBytes("\r\n");
+    if (request.startsWith("GET")) {
+      writeFile(file);
+    }
+    out.flush();
+    out.close();
+  }
+
+  private void writeGeneralResponseHeaders(int statusCode, String statusTitle) throws Exception {
+    String http = request.substring(request.length() - 8, request.length()).trim();
+    String status = http + " " + statusCode + " " + statusTitle + "\r\n";
+    out.writeBytes(status);
+    out.writeBytes("Server: Java File Server" + "\r\n");
+    out.writeBytes("date: " + new Date() + "\r\n");
+  }
+
+  private void writeFile(File file) {
     try {
       FileInputStream fileInputStream = new FileInputStream(file);
       byte[] buffer = new byte[1000];
