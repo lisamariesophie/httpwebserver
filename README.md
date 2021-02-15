@@ -19,10 +19,9 @@ In order to run this container you'll need docker and docker compose installed.
 ### Usage
 
 1. Add directory/files to project folder
-2. Run the Container and set the root directory with `ROOTDIR=[directory] docker-compose up`
+2. Run the Container and set the root directory with `ROOTDIR=directory docker-compose up`
 3. Explore files by sending requests to `localhost:8080/[path in directory]`
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
-
